@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="de">
+  <head>
+  	<meta charset="utf-8">
+    <title>Slideshow Aufnahme</title>
+    <link rel="stylesheet" type="text/css" href="slideshow.css">
+    <script src="libs/jquery.js"></script>
+    <script src="libs/pdf.js"></script>
+    <script src="libs/jquery.jplayer.min.js"></script>
+    <script src="record.js"></script>
+  </head>
+  <body>
+    <h1>Slideshow Aufnahme</h1>
+    <div id="player"></div>
+    <p>
+      <button id="start">Start Record</button>
+      &nbsp; &nbsp;
+      <span id="recordTime"></span>
+    </p>
+
+    <p><canvas id="the-canvas" style="border:1px solid black"></canvas></p>
+
+    <p>
+      <button id="prev">Previous</button>
+      <button id="next">Next</button>
+      &nbsp; &nbsp;
+      <span>Page: <span id="page_num"></span> / <span id="page_count"></span></span>
+    </p>
+
+    <textarea id="log" rows="15" cols="60"></textarea>
+  </body>
+</html>
