@@ -41,21 +41,20 @@ $(function () {
 
   var pdfDoc = null,
     currentPage = 1,
-    canvas = $('#the-canvas')[0],
-    context = canvas.getContext('2d'),
+    $canvas = $('#the-canvas'),
+    context = $canvas[0].getContext('2d'),
     player = $('#player'),
     isPlaying = false;
 
-  // timestamps where to start the pages (sorted by timestamps)
-  // first element is time in seconds
-  // second element is the number of the page to show
-
-  // var mp3file = "test.mp3"
-  // var slides = [[0,1], [9,2], [18,3], [21,4], [27,5], [32,6], [37,7]];
-
-  var mp3file = "test2.mp3"
-  var slides = [[0,1],[12.9,2],[30.9,3],[36.4,2],[40.2,3],[44.9,4],[47.1,5],[54.7,4],[54.9,3],[55.3,2],[55.6,1],[59,2],[59.2,3],[59.4,4],[59.7,5],[59.9,6]];
-
+  // mp3file, slides and points must be defined before loading this script
+  // * mp3file contains the filename of the mp3 encoded audio file
+  // * slides contains the timestamps where to start the pages (sorted by timestamps)
+  //    - first element is time in seconds
+  //    - second element is the number of the page to show
+  // * points contains the timestamps where the pointer should be shown
+  //    - first element is time in seconds
+  //    - second element is the x coordinate
+  //    - third element is the y coordinate
 
 
   // timestamps sorted by pages
@@ -88,7 +87,6 @@ $(function () {
     $("#duration").text($.jPlayer.convertTime(duration));
 
     var nextPage = -1;
-    var lastTimestamp = -1;
     $.each(slides, function (i, value) {
       var timestamp = value[0];
       if (timestamp > current) {
@@ -100,6 +98,18 @@ $(function () {
     	currentPage = nextPage;
     	renderPage();
     }
+
+    var nextPoint = null;
+    $.each(points, function (i, value) {
+      var timestamp = value[0];
+      if (timestamp > current) {
+        return false;
+      }
+      nextPoint = value;
+    });
+    if (nextPoint && Math.abs(current - nextPoint[0]) < .5) {
+      updatePointer(nextPoint[1], nextPoint[2]);
+    }
   });
 
   player.bind($.jPlayer.event.play, function (event) {
@@ -110,6 +120,69 @@ $(function () {
     // This event is raised in case of stop AND pause.
     isPlaying = false;
   });
+
+  var circle = $('<div></div>');
+  circle.css({
+    backgroundColor: "#FF0000",
+    position: "absolute"
+  });
+  circle.hide();
+  $("body").append(circle);
+  var pointerTimeout = null;
+  
+  function updatePointer(x,y) {
+    // compute absolut coordinates
+    var offset = $canvas.offset(),
+      circleRadius = .03 * $canvas.width();
+    x = offset.left + $canvas.width() * x;
+    y = offset.top + $canvas.height() * y;
+    // display circle
+    circle.stop();
+    if (pointerTimeout) {
+      circle.animate({
+        top: y - circleRadius,
+        left: x - circleRadius
+      }, 300);
+      window.clearTimeout(pointerTimeout);
+      pointerTimeout = null;
+    } else {
+      circle.show();
+      circle.css({
+        top: y,
+        left: x,
+        opacity: 0,
+        borderRadius: 0,
+        width: 0,
+        height: 0
+      });
+      circle.animate({
+        top: y - circleRadius,
+        left: x - circleRadius,
+        width: 2 * circleRadius,
+        height: 2 * circleRadius,
+        borderRadius: circleRadius,
+        opacity: .64
+      }, {
+        duration: 600,
+        easing: "easeOutElastic"
+      });
+    }
+    // start timeout to hide circle
+    pointerTimeout = window.setTimeout(function() {
+      circle.fadeOut({
+        duration: 600
+      });
+      pointerTimeout = null;
+    }, 4000);
+  }
+
+  function killPointer () {
+    if (pointerTimeout) {
+      window.clearTimeout(pointerTimeout);
+      pointerTimeout = null;
+      circle.hide();
+    }
+  }
 
 
   function jumpInPlayer (play) {
@@ -129,8 +202,8 @@ $(function () {
     // Using promise to fetch the page
     pdfDoc.getPage(currentPage).then(function (page) {
       var viewport = page.getViewport(2);
-      canvas.height = viewport.height;
-      canvas.width = viewport.width;
+      $canvas[0].height = viewport.height;
+      $canvas[0].width = viewport.width;
 
       // Render PDF page into canvas context
       var renderContext = {
@@ -143,6 +216,9 @@ $(function () {
     // Update page counters
     $('#page_num').text(currentPage);
     $('#page_count').text(pdfDoc.numPages);
+
+    // Hide pointer
+    killPointer();
   }
 
   // Asynchronously download PDF as an ArrayBuffer

@@ -3,11 +3,12 @@ $(function () {
 
   var pdfDoc = null,
     currentPage = null,
-    canvas = $('#the-canvas')[0],
-    context = canvas.getContext('2d'),
+    $canvas = $('#the-canvas'),
+    context = $canvas[0].getContext('2d'),
     player = $('#player'),
     timeStarted = null,
-    slides = [];
+    slides = [],
+    points = [];
 
   player.jPlayer({
     ready: function () {
@@ -25,6 +26,7 @@ $(function () {
   player.bind($.jPlayer.event.ended, function () {
     timeStarted = (new Date()).getTime() / 1000;
     slides.push([currentTimestamp(), currentPage]);
+    updateLog();
     window.setInterval(function () {
       $('#recordTime').text($.jPlayer.convertTime(currentTimestamp()));
     }, 250);
@@ -42,6 +44,78 @@ $(function () {
     return Math.round(now * 10)/10;
   }
 
+  function updateLog () {
+    var text = 'var slides = ' + JSON.stringify(slides) + ';\n';
+    text = text + 'var points = ' + JSON.stringify(points) + ';\n';
+    $('#log').text(text);
+  }
+
+  var circle = $('<div></div>');
+  circle.css({
+    backgroundColor: "#FF0000",
+    position: "absolute"
+  });
+  circle.hide();
+  $("body").append(circle);
+
+  var pointerTimeout = null;
+  $canvas.click(function (event) {
+    var circleRadius = .03 * $canvas.width();
+    // display circle
+    circle.stop();
+    if (pointerTimeout) {
+      circle.animate({
+        top: event.pageY - circleRadius,
+        left: event.pageX - circleRadius
+      }, {
+        duration: 300
+      });
+      window.clearTimeout(pointerTimeout);
+      pointerTimeout = null;
+    } else {
+      circle.show();
+      circle.css({
+        top: event.pageY,
+        left: event.pageX,
+        opacity: 0,
+        borderRadius: 0,
+        width: 0,
+        height: 0
+      });
+      circle.animate({
+        top: event.pageY - circleRadius,
+        left: event.pageX - circleRadius,
+        width: 2 * circleRadius,
+        height: 2 * circleRadius,
+        borderRadius: circleRadius,
+        opacity: .64
+      }, {
+        duration: 600,
+        easing: "easeOutElastic"
+      });
+    }
+    // add circles coordinates to pointers list
+    if (timeStarted) {
+      var point = [currentTimestamp()],
+        offset = $canvas.offset(),
+        i;
+      point.push((event.pageX - offset.left) / $canvas.width());
+      point.push((event.pageY - offset.top) / $canvas.height());
+      for (i = 1; i < 3; i++) {
+        point[i] = Math.round(point[i] * 1000) / 1000;
+      }
+      points.push(point);
+      updateLog();
+    }
+    // start timeout to hide circle
+    pointerTimeout = window.setTimeout(function() {
+      circle.fadeOut({
+        duration: 600
+      });
+      pointerTimeout = null;
+    }, 4000);
+  });
+
   
 
   // Get page info from document, resize canvas accordingly, and render page
@@ -49,8 +123,8 @@ $(function () {
     // Using promise to fetch the page
     pdfDoc.getPage(page).then(function (page) {
       var viewport = page.getViewport(2);
-      canvas.height = viewport.height;
-      canvas.width = viewport.width;
+      $canvas[0].height = viewport.height;
+      $canvas[0].width = viewport.width;
 
       // Render PDF page into canvas context
       var renderContext = {
@@ -65,10 +139,17 @@ $(function () {
     $('#page_num').text(currentPage);
     $('#page_count').text(pdfDoc.numPages);
 
+    // hide pointer
+    if (pointerTimeout) {
+      window.clearTimeout(pointerTimeout);
+      pointerTimeout = null;
+      circle.hide();
+    }
+
     // log page change
     if (timeStarted) {
       slides.push([currentTimestamp(), page]);
-      $('#log').text('var slides = ' + JSON.stringify(slides) + ';');
+      updateLog();
     }
   }
 
