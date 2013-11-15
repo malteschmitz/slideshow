@@ -50,70 +50,22 @@ $(function () {
     $('#log').text(text);
   }
 
-  var circle = $('<div></div>');
-  circle.css({
-    backgroundColor: "#FF0000",
-    position: "absolute"
-  });
-  circle.hide();
-  $("body").append(circle);
-
-  var pointerTimeout = null;
   $canvas.click(function (event) {
-    var circleRadius = .03 * $canvas.width();
+    // compute coordinates
+    var x, y, offset = $canvas.offset();
+    x = (event.pageX - offset.left) / $canvas.width();
+    x = Math.round(x * 1000) / 1000;
+    y = (event.pageY - offset.top) / $canvas.height();
+    y = Math.round(y * 1000) / 1000;
+
     // display circle
-    circle.stop();
-    if (pointerTimeout) {
-      circle.animate({
-        top: event.pageY - circleRadius,
-        left: event.pageX - circleRadius
-      }, {
-        duration: 300
-      });
-      window.clearTimeout(pointerTimeout);
-      pointerTimeout = null;
-    } else {
-      circle.show();
-      circle.css({
-        top: event.pageY,
-        left: event.pageX,
-        opacity: 0,
-        borderRadius: 0,
-        width: 0,
-        height: 0
-      });
-      circle.animate({
-        top: event.pageY - circleRadius,
-        left: event.pageX - circleRadius,
-        width: 2 * circleRadius,
-        height: 2 * circleRadius,
-        borderRadius: circleRadius,
-        opacity: .64
-      }, {
-        duration: 600,
-        easing: "easeOutElastic"
-      });
-    }
+    slideshowPointer.show(x,y);
+
     // add circles coordinates to pointers list
     if (timeStarted) {
-      var point = [currentTimestamp()],
-        offset = $canvas.offset(),
-        i;
-      point.push((event.pageX - offset.left) / $canvas.width());
-      point.push((event.pageY - offset.top) / $canvas.height());
-      for (i = 1; i < 3; i++) {
-        point[i] = Math.round(point[i] * 1000) / 1000;
-      }
-      points.push(point);
+      points.push([currentTimestamp(), x, y]);
       updateLog();
     }
-    // start timeout to hide circle
-    pointerTimeout = window.setTimeout(function() {
-      circle.fadeOut({
-        duration: 600
-      });
-      pointerTimeout = null;
-    }, 4000);
   });
 
   
@@ -140,11 +92,7 @@ $(function () {
     $('#page_count').text(pdfDoc.numPages);
 
     // hide pointer
-    if (pointerTimeout) {
-      window.clearTimeout(pointerTimeout);
-      pointerTimeout = null;
-      circle.hide();
-    }
+    slideshowPointer.hide();
 
     // log page change
     if (timeStarted) {

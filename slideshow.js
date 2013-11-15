@@ -108,7 +108,7 @@ $(function () {
       nextPoint = value;
     });
     if (nextPoint && Math.abs(current - nextPoint[0]) < .5) {
-      updatePointer(nextPoint[1], nextPoint[2]);
+      slideshowPointer.show(nextPoint[1], nextPoint[2]);
     }
   });
 
@@ -120,69 +120,6 @@ $(function () {
     // This event is raised in case of stop AND pause.
     isPlaying = false;
   });
-
-  var circle = $('<div></div>');
-  circle.css({
-    backgroundColor: "#FF0000",
-    position: "absolute"
-  });
-  circle.hide();
-  $("body").append(circle);
-  var pointerTimeout = null;
-  
-  function updatePointer(x,y) {
-    // compute absolut coordinates
-    var offset = $canvas.offset(),
-      circleRadius = .03 * $canvas.width();
-    x = offset.left + $canvas.width() * x;
-    y = offset.top + $canvas.height() * y;
-    // display circle
-    circle.stop();
-    if (pointerTimeout) {
-      circle.animate({
-        top: y - circleRadius,
-        left: x - circleRadius
-      }, 300);
-      window.clearTimeout(pointerTimeout);
-      pointerTimeout = null;
-    } else {
-      circle.show();
-      circle.css({
-        top: y,
-        left: x,
-        opacity: 0,
-        borderRadius: 0,
-        width: 0,
-        height: 0
-      });
-      circle.animate({
-        top: y - circleRadius,
-        left: x - circleRadius,
-        width: 2 * circleRadius,
-        height: 2 * circleRadius,
-        borderRadius: circleRadius,
-        opacity: .64
-      }, {
-        duration: 600,
-        easing: "easeOutElastic"
-      });
-    }
-    // start timeout to hide circle
-    pointerTimeout = window.setTimeout(function() {
-      circle.fadeOut({
-        duration: 600
-      });
-      pointerTimeout = null;
-    }, 4000);
-  }
-
-  function killPointer () {
-    if (pointerTimeout) {
-      window.clearTimeout(pointerTimeout);
-      pointerTimeout = null;
-      circle.hide();
-    }
-  }
 
 
   function jumpInPlayer (play) {
@@ -218,7 +155,7 @@ $(function () {
     $('#page_count').text(pdfDoc.numPages);
 
     // Hide pointer
-    killPointer();
+    slideshowPointer.hide();
   }
 
   // Asynchronously download PDF as an ArrayBuffer
