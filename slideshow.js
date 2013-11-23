@@ -46,8 +46,8 @@ $(function () {
     player = $('#player'),
     isPlaying = false;
 
-  // mp3file, slides and points must be defined before loading this script
-  // * mp3file contains the filename of the mp3 encoded audio file
+  // audiofile, slides and points must be defined before loading this script
+  // * audiofile contains the base part of filenames of the mp3 and oga encoded audio files
   // * slides contains the timestamps where to start the pages (sorted by timestamps)
   //    - first element is time in seconds
   //    - second element is the number of the page to show
@@ -70,13 +70,14 @@ $(function () {
   player.jPlayer({
     ready: function () {
       $(this).jPlayer("setMedia", {
-        mp3: mp3file
+        oga: audiofile + ".ogg",
+        mp3: audiofile + ".mp3"
       });
     },
     swfPath: "libs",
     preload: "auto",
     wmode: "window",
-    supplied: "mp3",
+    supplied: "oga,mp3",
     keyEnabled: true
   });
 
