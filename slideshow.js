@@ -136,6 +136,10 @@ $(function () {
 
   // Get page info from document, resize canvas accordingly, and render page
   function renderPage () {
+    if (!pdfDoc) {
+      // avoid trying to render a page before the document is loaded
+      return;
+    }
     // Using promise to fetch the page
     pdfDoc.getPage(currentPage).then(function (page) {
       var viewport = page.getViewport(2);
