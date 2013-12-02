@@ -1,1 +1,22 @@
-/* empty */
+/*
+ * Slideshow Player
+ *
+ * Styles for the canvas and the player for the slideshow
+ */
+
+#the-canvas {
+  border: 1px solid black;
+}
+
+#jp_container_1, #slide_navigation {
+  float: left;
+}
+
+#slide_navigation {
+  margin: 0 0 0 50px;
+}
+
+#footer {
+  clear: both;
+  padding: 50px 0 50px 0;
+}

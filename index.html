@@ -23,6 +23,9 @@
   </head>
   <body>
     <h1>Slideshow</h1>
+
+    <p><canvas id="the-canvas"></canvas></p>
+
     <div id="player"></div>
     <div id="jp_container_1" class="jp-audio">
       <div class="jp-type-single">
@@ -53,13 +56,13 @@
       </div>
     </div>
 
-    <p><canvas id="the-canvas" style="border:1px solid black"></canvas></p>
-
-    <p>
+    <p id="slide_navigation">
       <button id="prev">Previous</button>
       <button id="next">Next</button>
       &nbsp; &nbsp;
       <span>Page: <span id="page_num"></span> / <span id="page_count"></span></span>
     </p>
+
+    <p id="footer">A project by <a href="http://www.mlte.de">Malte</a>.</p>
   </body>
 </html>
