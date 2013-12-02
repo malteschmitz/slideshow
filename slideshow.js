@@ -44,7 +44,8 @@ $(function () {
     $canvas = $('#the-canvas'),
     context = $canvas[0].getContext('2d'),
     player = $('#player'),
-    isPlaying = false;
+    isPlaying = false,
+    zoom = 1;
 
   // audiofile, slides and points must be defined before loading this script
   // * audiofile contains the base part of filenames of the mp3 and oga encoded audio files
@@ -152,6 +153,13 @@ $(function () {
     // Using promise to fetch the page
     pdfDoc.getPage(currentPage).then(function (page) {
       var viewport = page.getViewport(2);
+
+      viewport.width *= zoom;
+      viewport.height *= zoom;
+      viewport.transform[0] *= zoom;
+      viewport.transform[3] *= zoom;
+      viewport.transform[5] *= zoom;
+
       $canvas[0].height = viewport.height;
       $canvas[0].width = viewport.width;
 
@@ -200,6 +208,22 @@ $(function () {
   $("#next").click(function () {
     if (currentPage < pdfDoc.numPages) {
       gotoPage(currentPage + 1);
+    }
+    return false;
+  });
+
+  $("#zoom-in").click(function() {
+    if (zoom < 5) {
+      zoom *= 1.2;
+      renderPage();  
+    }
+    return false;
+  });
+
+  $("#zoom-out").click(function() {
+    if (zoom > 0.3) {
+      zoom /= 1.2;
+      renderPage();
     }
     return false;
   });
