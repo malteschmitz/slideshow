@@ -227,4 +227,13 @@ $(function () {
     }
     return false;
   });
+
+  $canvas.click(function() {
+    if (isPlaying) {
+      player.jPlayer("pause");
+    } else {
+      player.jPlayer("play");
+    }
+    return false;
+  });
 });

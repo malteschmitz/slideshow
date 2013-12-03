@@ -6,6 +6,7 @@
 
 #the-canvas {
   border: 1px solid black;
+  cursor: pointer;
 }
 
 #jp_container_1, #slide_navigation {
