@@ -24,9 +24,9 @@
   <body>
     <h1>Slideshow</h1>
 
-    <p id="zoom">Zoom <button id="zoom-in">in</button> <button id="zoom-out">out</button></p>
-
-    <p><canvas id="the-canvas"></canvas></p>
+    <div id="slideshow">
+      <canvas></canvas>
+    </div>
 
     <div id="player"></div>
     <div id="jp_container_1" class="jp-audio">
@@ -58,12 +58,15 @@
       </div>
     </div>
 
-    <p id="slide_navigation">
-      <button id="prev">Previous</button>
-      <button id="next">Next</button>
-      &nbsp; &nbsp;
-      <span>Page: <span id="page_num"></span> / <span id="page_count"></span></span>
-    </p>
+    <div id="slide_navigation">
+      <p>
+        <button id="prev">Previous</button>
+        <button id="next">Next</button>
+        &nbsp; &nbsp;
+        <span>Page: <span id="page_num"></span> / <span id="page_count"></span></span>
+      </p>
+      <p>Zoom <button id="zoom-out">-</button> <button id="zoom-default">0</button> <button id="zoom-in">+</button> &nbsp; &nbsp; <button id="fullscreen">Fullscreen</button></p>
+    </div>
 
     <p id="footer">A project by <a href="http://www.mlte.de">Malte</a>.</p>
   </body>

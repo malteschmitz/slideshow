@@ -2,7 +2,7 @@
 <html lang="de">
   <head>
   	<meta charset="utf-8">
-    <title>Slideshow Aufnahme</title>
+    <title>Slideshow Recording</title>
     <link rel="stylesheet" type="text/css" href="slideshow.css">
     <script src="libs/jquery-1.10.2.js"></script>
     <script src="libs/jquery-ui-1.10.3.custom.js"></script>
@@ -12,15 +12,17 @@
     <script src="record.js"></script>
   </head>
   <body>
-    <h1>Slideshow Aufnahme</h1>
+    <h1>Slideshow Recording</h1>
     <div id="player"></div>
     <p>
-      <button id="start">Start Record</button>
+      <button id="start">Start Recording</button>
       &nbsp; &nbsp;
       <span id="recordTime"></span>
     </p>
 
-    <p><canvas id="the-canvas" style="border:1px solid black"></canvas></p>
+    <div id="slideshow">
+      <canvas></canvas>
+    </div>
 
     <p>
       <button id="prev">Previous</button>

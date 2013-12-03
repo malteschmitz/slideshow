@@ -3,7 +3,7 @@ $(function () {
 
   var pdfDoc = null,
     currentPage = null,
-    $canvas = $('#the-canvas'),
+    $canvas = $('#slideshow canvas'),
     context = $canvas[0].getContext('2d'),
     player = $('#player'),
     timeStarted = null,
