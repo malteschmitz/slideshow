@@ -412,24 +412,33 @@ $(function () {
     switch (event.which) {
       case 173: // -
         zoomOut();
+        event.preventDefault();
         break;
       case 48: // 0
         zoomDefault();
+        event.preventDefault();
         break;
       case 61: // +
         zoomIn();
+        event.preventDefault();
         break;
       case 37: // Left
+      case 33: // Page Up
         prevPage();
+        event.preventDefault();
         break;
       case 39: // Right
+      case 34: // Page Down
         nextPage();
+        event.preventDefault();
         break;
       case 13: // Enter
         toggleFullScreen();
+        event.preventDefault();
         break;
       case 32: // Space
         togglePlayPause();
+        event.preventDefault();
         break;
     }
   })
