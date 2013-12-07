@@ -39,14 +39,18 @@ Array.prototype.binaryIndexOf = binaryIndexOf;
 $(function () {
   'use strict';
 
-  var pdfDoc = null,
-    currentPage = 1,
-    $canvas = $('#slideshow canvas'),
-    context = $canvas[0].getContext('2d'),
-    player = $('#player'),
-    isPlaying = false,
-    isFullScreen = false,
-    zoom = 2;
+  var pdfDoc, pdfDocDestinations, canvas, context, player, annotationLayer,
+    pagePromises = [], pagesRefMap = {};
+  var currentPage = 1;
+  var isPlaying = false;
+  var isFullScreen = false;
+  var zoom = 2;
+
+  canvas = $('<canvas></canvas>');
+  context = canvas[0].getContext('2d');
+  player = $('#player');
+  annotationLayer = $('<div class="annotationLayer"></div>');
+  $('#slideshow').append(canvas).append(annotationLayer);
 
   // audiofile, slides and points must be defined before loading this script
   // * audiofile contains the base part of filenames of the mp3 and oga encoded audio files
@@ -70,8 +74,8 @@ $(function () {
   });
 
   // display initial please wait on the canvas
-  $canvas[0].height = 544;
-  $canvas[0].width = 725;
+  canvas[0].height = 544;
+  canvas[0].width = 725;
   context.font = "24pt \"Helvetica Neue\",Helvetica,Arial,sans-serif";
   context.fillText("Bitte warten!", 10, 50);
   context.font = "16pt \"Helvetica Neue\",Helvetica,Arial,sans-serif";
@@ -132,7 +136,6 @@ $(function () {
     isPlaying = false;
   });
 
-
   function jumpInPlayer (play) {
     // jump in player to the slide matching the current page
     var target = timestamps[currentPage];
@@ -145,6 +148,126 @@ $(function () {
     }
   }
 
+  // Arrange hyperlinks on the canvas to handle links in the PDF
+  function setupAnnotations(page, viewport) {
+    function bindInternalLink(link, dest) {
+      link.attr('href', '#');
+      link.click(function () {
+        var destination = pdfDocDestinations[dest];
+        if (destination instanceof Array) {
+          var destRef = destination[0];
+          var pageNumber = destRef instanceof Object ?
+            pagesRefMap[destRef.num + ' ' + destRef.gen + ' R'] :
+            (destRef + 1);
+          if (pageNumber <= pdfDoc.numPages) {
+            gotoPage(pageNumber);
+          }
+        }
+        return false;
+      });
+    }
+
+    function bindExternalLink(link, url) {
+      link.click(function () {
+        player.jPlayer("pause");
+        open(url);
+        return false;
+      });
+    }
+
+    function bindNamedAction(link, action) {
+      link.attr('href', '#');
+      link.click(function () {
+        // See PDF reference, table 8.45 - Named action
+        switch (action) {
+          case 'GoToPage':
+          case 'Find':
+            // unable to handle these without such a GUI element
+            break;
+
+          case 'GoBack':
+          case 'GoForward':
+            // unable to handles these without a history
+            break;
+
+          case 'NextPage':
+            nextPage();
+            break;
+
+          case 'PrevPage':
+            prevPage();
+            break;
+
+          case 'LastPage':
+            if (currentPage != pdfDoc.numPages) {
+              gotoPage(pdfDoc.numPages);
+            }
+            break;
+
+          case 'FirstPage':
+            if (currentPage != 1) {
+              gotoPage(1);
+            }
+            break;
+
+          default:
+            break; // No action according to spec
+        }
+
+        return false;
+      });
+    }
+
+    annotationLayer.empty();
+    var canvasOffset = canvas.offset();
+    page.getAnnotations().then(function (annotationsData) {
+      viewport = viewport.clone({
+        dontFlip: true
+      });
+
+      for (var i = 0; i < annotationsData.length; i++) {
+        var data = annotationsData[i];
+        var annotation = PDFJS.Annotation.fromData(data);
+        if (!annotation || !annotation.hasHtml()) {
+          continue;
+        }
+
+        var element = annotation.getHtmlElement(page.commonObjs);
+        data = annotation.getData();
+        var rect = data.rect;
+        var view = page.view;
+        rect = PDFJS.Util.normalizeRect([
+          rect[0],
+          view[3] - rect[1] + view[1],
+          rect[2],
+          view[3] - rect[3] + view[1]]);
+        $(element).css({
+          left: (canvasOffset.left + rect[0]) + 'px',
+          top: (canvasOffset.top + rect[1]) + 'px',
+          position: 'absolute'
+        });
+
+        var transform = viewport.transform;
+        var transformStr = 'matrix(' + transform.join(',') + ')';
+        CustomStyle.setProp('transform', element, transformStr);
+        var transformOriginStr = -rect[0] + 'px ' + -rect[1] + 'px';
+        CustomStyle.setProp('transformOrigin', element, transformOriginStr);
+
+        if (data.subtype === 'Link') {
+          if (data.url) {
+            bindExternalLink($(element), data.url);
+          } else if (data.action) {
+            bindNamedAction($(element), data.action);
+          } else if (data.dest) {
+            bindInternalLink($(element), data.dest);
+          }
+        }
+
+        annotationLayer.append(element);
+      }
+    });
+  }
+
   // Get page info from document, resize canvas accordingly, and render page
   function renderPage () {
     if (!pdfDoc) {
@@ -152,7 +275,7 @@ $(function () {
       return;
     }
     // Using promise to fetch the page
-    pdfDoc.getPage(currentPage).then(function (page) {
+    pagePromises[currentPage - 1].then(function (page) {
       var viewport, z;
       if (isFullScreen) {
         viewport = page.getViewport(1);
@@ -162,8 +285,8 @@ $(function () {
         viewport = page.getViewport(zoom);
       }
 
-      $canvas[0].height = viewport.height;
-      $canvas[0].width = viewport.width;
+      canvas[0].height = viewport.height;
+      canvas[0].width = viewport.width;
 
       // Render PDF page into canvas context
       var renderContext = {
@@ -171,6 +294,7 @@ $(function () {
         viewport: viewport
       };
       page.render(renderContext);
+      setupAnnotations(page, viewport);
     });
 
     // Update page counters
@@ -187,6 +311,22 @@ $(function () {
   // Asynchronously download PDF as an ArrayBuffer
   PDFJS.getDocument("//slideshow/latex.pdf").then(function (_pdfDoc) {
     pdfDoc = _pdfDoc;
+    
+    pdfDoc.getDestinations().then(function(destinations) {
+      pdfDocDestinations = destinations;
+    });
+
+    var pageNum, pagePromise;
+    for (pageNum = 1; pageNum <= pdfDoc.numPages; pageNum++) {
+      pagePromise = pdfDoc.getPage(pageNum);
+      pagePromise.then(function (pdfPage) {
+        var pageRef = pdfPage.ref;
+        var refStr = pageRef.num + ' ' + pageRef.gen + ' R';
+        pagesRefMap[refStr] = pdfPage.pageNumber;
+      });
+      pagePromises.push(pagePromise);
+    }
+
     renderPage();
   });
 
@@ -266,7 +406,7 @@ $(function () {
     return false;
   }
 
-  $canvas.click(togglePlayPause);
+  canvas.click(togglePlayPause);
 
   $(document).keydown(function (event) {
     switch (event.which) {
