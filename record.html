@@ -8,8 +8,18 @@
     <script src="libs/jquery-ui-1.10.3.custom.js"></script>
     <script src="libs/jquery.jplayer.min.js"></script>
     <script src="libs/pdf.js"></script>
-    <script src="pointer.js"></script>
-    <script src="record.js"></script>
+    <script src="slideshow.js"></script>
+    <script src="slideshow-recorder.js"></script>
+    <script>
+      $(function() {
+        new SlideshowRecorder({
+          swfPath: 'libs',
+          workerSrc: 'libs/pdf.worker.js',
+          beepSrc: 'start.mp3',
+          presentationUrl: '//slideshow/latex.pdf'
+        });
+      });
+    </script>
   </head>
   <body>
     <h1>Slideshow Recording</h1>
@@ -20,16 +30,19 @@
       <span id="recordTime"></span>
     </p>
 
-    <div id="slideshow">
-      <canvas></canvas>
+    <div id="slideshow"></div>
+
+    <div id="slide_navigation">
+      <p>
+        <button id="prev">Previous</button>
+        <button id="next">Next</button>
+        &nbsp; &nbsp;
+        <span>Page: <span id="page_num"></span> / <span id="page_count"></span></span>
+      </p>
+      <p>Zoom <button id="zoom-out">-</button> <button id="zoom-default">0</button> <button id="zoom-in">+</button> &nbsp; &nbsp; <button id="fullscreen">Fullscreen</button></p>
     </div>
 
-    <p>
-      <button id="prev">Previous</button>
-      <button id="next">Next</button>
-      &nbsp; &nbsp;
-      <span>Page: <span id="page_num"></span> / <span id="page_count"></span></span>
-    </p>
+    <p id="footer">A project by <a href="http://www.mlte.de">Malte</a>.</p>
 
     <textarea id="log" rows="15" cols="60"></textarea>
   </body>
