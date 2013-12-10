@@ -1,9 +1,9 @@
-slides = [[0,1],[50.8,2]]
+timestampPages = [[0,1],[50.8,2]]
 
 # timestamps sorted by pages
 # number of the page is used as key and its timestamp as value
 timestamps = [];
-for value in slides
+for value in timestampPages
   old = timestamps[value[1]]
   if (old == undefined or old > value[0])
     timestamps[value[1]] = value[0]
